@@ -532,7 +532,7 @@
     // Ignore if tag has
     // 1. "download" attribute
     // 2. rel="external" attribute
-    if (el.getAttribute('download') || el.getAttribute('rel') === 'external') return;
+    if (el.hasAttribute('download') || el.getAttribute('rel') === 'external') return;
 
     // ensure non-hash for the same path
     var link = el.getAttribute('href');
@@ -557,10 +557,11 @@
     // same page
     var orig = path;
 
-    path = path.replace(base, '');
+    if (path.indexOf(base) === 0) {
+      path = path.substr(base.length);
+    }
+
     if (hashbang) path = path.replace('#!', '');
-
-
 
     if (base && orig === path) return;
 
