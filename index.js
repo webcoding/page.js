@@ -15,6 +15,11 @@
   module.exports = page;
 
   /**
+   * Detect click event
+   */
+  var clickEvent = ('undefined' !== typeof document) && document.ontouchstart ? 'touchstart' : 'click';
+
+  /**
    * To work properly with the URL
    * history.location generated polyfill in https://github.com/devote/HTML5-History-API
    */
@@ -26,6 +31,7 @@
    */
 
   var dispatch = true;
+
 
   /**
    * Decode URL components (query string, pathname, hash).
@@ -153,7 +159,9 @@
     if (false === options.dispatch) dispatch = false;
     if (false === options.decodeURLComponents) decodeURLComponents = false;
     if (false !== options.popstate) window.addEventListener('popstate', onpopstate, false);
-    if (false !== options.click) window.addEventListener('click', onclick, false);
+    if (false !== options.click) {
+      document.addEventListener(clickEvent, onclick, false);
+    }
     if (true === options.hashbang) hashbang = true;
     if (!dispatch) return;
     var url = (hashbang && ~location.hash.indexOf('#!')) ? location.hash.substr(2) + location.search : location.pathname + location.search + location.hash;
@@ -171,7 +179,7 @@
     page.current = '';
     page.len = 0;
     running = false;
-    window.removeEventListener('click', onclick, false);
+    document.removeEventListener(clickEvent, onclick, false);
     window.removeEventListener('popstate', onpopstate, false);
   };
 
@@ -495,19 +503,35 @@
     return true;
   };
 
+
   /**
    * Handle "populate" events.
    */
 
-  function onpopstate(e) {
-    if (e.state) {
-      var path = e.state.path;
-      page.replace(path, e.state);
-    } else {
-      page.show(location.pathname + location.hash, undefined, undefined, false);
+  var onpopstate = (function () {
+    var loaded = false;
+    if ('undefined' === typeof window) {
+      return;
     }
-  }
-
+    if (document.readyState === 'complete') {
+      loaded = true;
+    } else {
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          loaded = true;
+        }, 0);
+      });
+    }
+    return function onpopstate(e) {
+      if (!loaded) return;
+      if (e.state) {
+        var path = e.state.path;
+        page.replace(path, e.state);
+      } else {
+        page.show(location.pathname + location.hash, undefined, undefined, false);
+      }
+    };
+  })();
   /**
    * Handle "click" events.
    */
@@ -552,6 +576,11 @@
 
     // rebuild path
     var path = el.pathname + el.search + (el.hash || '');
+
+    // strip leading "/[drive letter]:" on NW.js on Windows
+    if (typeof process !== 'undefined' && path.match(/^\/[a-zA-Z]:\//)) {
+      path = path.replace(/^\/[a-zA-Z]:\//, '/');
+    }
 
     // same page
     var orig = path;

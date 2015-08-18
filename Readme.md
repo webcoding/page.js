@@ -27,12 +27,6 @@ page()
   $ bower install visionmedia/page.js
   ```
 
-  Via CDN and script tag:
-
-  ```html
-  <script src="https://cdn.rawgit.com/visionmedia/page.js/master/page.js"></script>
-  ```
-
 ## Running examples
 
   To run examples do the following to install dev dependencies and run the example server:
@@ -99,7 +93,7 @@ $('.view').click(function(e){
 
 ### page(fromPath, toPath)
 
-  Setup redirect form one path to other.
+  Setup redirect from one path to another.
 
 ### page.redirect(fromPath, toPath)
 
